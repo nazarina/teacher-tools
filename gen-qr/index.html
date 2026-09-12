@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор QR-кодов для уроков | teacher-tools</title>
+  <!-- Подключаем библиотеки: qrcodejs и html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --soft-pink: #fff0f3;
+      --soft-purple: #f3f0ff;
+      --accent-color: #008080;
+      --deep-accent: #800000;
+      --text-main: #4a4a4a;
+      --white: #ffffff;
+      --button-grad: linear-gradient(to top, #800000 0%, #d63031 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--soft-purple);
+      color: var(--text-main);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--deep-accent);
+      margin-bottom: 8px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    p.subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"], input[type="url"], select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--white);
+    }
+
+    input[type="text"]:focus, input[type="url"]:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .preset-btn {
+      background: var(--soft-pink);
+      color: var(--deep-accent);
+      border: 1px solid #f2cfd7;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      background: #fcdbe2;
+    }
+
+    .btn {
+      width: 100%;
+      background: var(--button-grad);
+      color: var(--white);
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-top: 15px;
+    }
+
+    .btn-secondary {
+      background: var(--accent-color);
+      flex: 1;
+    }
+
+    .result-wrapper {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Карточка с QR-кодом */
+    .qr-card {
+      background: var(--soft-pink);
+      border: 2px dashed var(--accent-color);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .qr-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--deep-accent);
+      margin-bottom: 15px;
+      word-break: break-word;
+    }
+
+    #qrcode {
+      background: var(--white);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
+    }
+
+    #qrcode img {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .watermark {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .footer-author {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Модальное окно полноэкранного режима для доски */
+    .fullscreen-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--white);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .fullscreen-modal .qr-title {
+      font-size: 2.5rem;
+      margin-bottom: 24px;
+    }
+
+    .fullscreen-modal #qrcode-fs {
+      transform: scale(1.5);
+      margin-bottom: 40px;
+    }
+
+    .fullscreen-modal .watermark {
+      font-size: 1.3rem;
+    }
+
+    .btn-close-fs {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--deep-accent);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Генератор QR-кодов для уроков</h1>
+  <p class="subtitle">Создайте QR-код за 5 секунд для вывода на доску или скачивания</p>
+
+  <div class="form-group">
+    <label for="qr-text">Ссылка на материал или ДЗ:</label>
+    <input type="url" id="qr-text" placeholder="https://..." value="https://">
+  </div>
+
+  <div class="form-group">
+    <label for="qr-title-input">Заголовок для доски:</label>
+    <input type="text" id="qr-title-input" placeholder="Введите или выберите шаблон ниже">
+    <div class="preset-buttons">
+      <button type="button" class="preset-btn" onclick="setPreset('📝 Домашнее задание')">📝 ДЗ</button>
+      <button type="button" class="preset-btn" onclick="setPreset('🧪 Практическая работа')">🧪 Практическая</button>
+      <button type="button" class="preset-btn" onclick="setPreset('📚 Материалы к уроку')">📚 Материалы</button>
+      <button type="button" class="preset-btn" onclick="setPreset('🎥 Посмотреть видео')">🎥 Видео</button>
+      <button type="button" class="preset-btn" onclick="setPreset('📊 Опрос / Тест')">📊 Тест</button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="qr-hint-select">Подсказка для учеников:</label>
+    <select id="qr-hint-select">
+      <option value="📱 Наведите камеру телефона, чтобы открыть ссылку">📱 Наведите камеру телефона</option>
+      <option value="📲 Сканируйте через Сферум / VK Мессенджер">📲 Сканируйте через Сферум / VK</option>
+      <option value="⏳ Откройте ссылку до конца урока">⏳ Откройте ссылку до конца урока</option>
+    </select>
+  </div>
+
+  <button class="btn" id="btn-generate">Сгенерировать QR-код</button>
+
+  <div id="result-container" class="result-wrapper hidden">
+    <!-- Блок, который скачивается как картинка -->
+    <div id="qr-card-to-download" class="qr-card">
+      <div id="qr-display-title" class="qr-title"></div>
+      <div id="qrcode"></div>
+      <div id="qr-display-hint" class="watermark"></div>
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="action-buttons">
+      <button class="btn btn-secondary" id="btn-download">💾 Скачать PNG</button>
+      <button class="btn btn-secondary" id="btn-fullscreen">🖥️ На весь экран</button>
+    </div>
+  </div>
+
+  <div class="footer-author">
+    Разработано с заботой для учителей 🐾 <br>
+    <b>Кот и Код</b> • Заботливое образование
+  </div>
+</div>
+
+<!-- Полноэкранный режим для доски -->
+<div id="fullscreen-modal" class="fullscreen-modal hidden">
+  <button class="btn-close-fs" id="btn-close-fs">✕ Закрыть</button>
+  <div id="fs-title" class="qr-title"></div>
+  <div id="qrcode-fs"></div>
+  <div id="fs-hint" class="watermark"></div>
+</div>
+
+<script>
+  let currentUrl = '';
+
+  function setPreset(text) {
+    document.getElementById('qr-title-input').value = text;
+  }
+
+  document.getElementById('btn-generate').onclick = function() {
+    currentUrl = document.getElementById('qr-text').value.trim();
+    const title = document.getElementById('qr-title-input').value.trim();
+    const hint = document.getElementById('qr-hint-select').value;
+
+    if (!currentUrl || currentUrl === 'https://') {
+      alert('Пожалуйста, введите корректную ссылку!');
+      return;
+    }
+
+    // Очищаем и создаем обычный QR
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: currentUrl,
+      width: 220,
+      height: 220,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
+    const titleElem = document.getElementById('qr-display-title');
+    if (title) {
+      titleElem.textContent = title;
+      titleElem.classList.remove('hidden');
+    } else {
+      titleElem.classList.add('hidden');
+    }
+
+    document.getElementById('qr-display-hint').textContent = hint;
+    document.getElementById('result-container').classList.remove('hidden');
+  };
+
+  // Скачивание карточки с QR-кодом как PNG
+  document.getElementById('btn-download').onclick = function() {
+    const card = document.getElementById('qr-card-to-download');
+    
+    html2canvas(card, {
+      scale: 2,
+      backgroundColor: null
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'qr-code-lesson.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  };
+
+  // Полноэкранный режим для доски
+  document.getElementById('btn-fullscreen').onclick = function() {
+    const title = document.getElementById('qr-title-input').value.trim();
+    const hint = document.getElementById('qr-hint-select').value;
+
+    const fsQrContainer = document.getElementById('qrcode-fs');
+    fsQrContainer.innerHTML = '';
+    new QRCode(fsQrContainer, {
+      text: currentUrl,
+      width: 280,
+      height: 280,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
+    document.getElementById('fs-title').textContent = title;
+    document.getElementById('fs-hint').textContent = hint;
+    document.getElementById('fullscreen-modal').classList.remove('hidden');
+  };
+
+  document.getElementById('btn-close-fs').onclick = function() {
+    document.getElementById('fullscreen-modal').classList.add('hidden');
+  };
+</script>
+
+</body>
+</html>
