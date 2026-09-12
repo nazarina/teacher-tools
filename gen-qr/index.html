@@ -35,6 +35,10 @@
       min-height: 100vh;
     }
 
+    body.no-scroll {
+      overflow: hidden;
+    }
+
     .container {
       width: 100%;
       max-width: 600px;
@@ -70,7 +74,7 @@
       font-size: 0.95rem;
     }
 
-    input[type="text"], input[type="url"], select {
+    input[type="text"], input[type="url"] {
       width: 100%;
       padding: 10px 14px;
       border: 1px solid #ccc;
@@ -78,10 +82,9 @@
       font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s;
-      background: var(--white);
     }
 
-    input[type="text"]:focus, input[type="url"]:focus, select:focus {
+    input[type="text"]:focus, input[type="url"]:focus {
       border-color: var(--accent-color);
     }
 
@@ -106,6 +109,30 @@
 
     .preset-btn:hover {
       background: #fcdbe2;
+    }
+
+    .theme-selector {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .theme-btn.active {
+      border-color: var(--accent-color);
+      background: var(--soft-purple);
+      color: var(--accent-color);
     }
 
     .btn {
@@ -147,7 +174,7 @@
       width: 100%;
     }
 
-    /* Карточка с QR-кодом */
+    /* Базовая карточка (Тема: Нежная) */
     .qr-card {
       background: var(--soft-pink);
       border: 2px dashed var(--accent-color);
@@ -159,9 +186,10 @@
       align-items: center;
       width: 100%;
       max-width: 400px;
+      transition: all 0.3s ease;
     }
 
-    .qr-title {
+    .qr-card .qr-title {
       font-size: 1.3rem;
       font-weight: bold;
       color: var(--deep-accent);
@@ -169,24 +197,56 @@
       word-break: break-word;
     }
 
+    .qr-card .watermark {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Тема: Доска */
+    .qr-card.theme-board {
+      background: #2b3a2a;
+      border: 2px solid #5a7358;
+    }
+
+    .qr-card.theme-board .qr-title {
+      color: #ffffff;
+    }
+
+    .qr-card.theme-board .watermark {
+      color: #c2d6c1;
+    }
+
+    /* Тема: Тетрадь в клетку */
+    .qr-card.theme-notebook {
+      background-color: #fcfdfd;
+      background-image: 
+        linear-gradient(#e1e8f0 1px, transparent 1px),
+        linear-gradient(90deg, #e1e8f0 1px, transparent 1px);
+      background-size: 16px 16px;
+      border: 2px solid #4a90e2;
+    }
+
+    .qr-card.theme-notebook .qr-title {
+      color: #1e40af;
+    }
+
+    .qr-card.theme-notebook .watermark {
+      color: #3b82f6;
+    }
+
     #qrcode {
       background: var(--white);
       padding: 12px;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      margin-bottom: 12px;
+      margin-bottom: 4px;
     }
 
     #qrcode img {
       display: block;
       margin: 0 auto;
-    }
-
-    .watermark {
-      font-size: 0.85rem;
-      color: #666;
-      margin-top: 4px;
-      font-style: italic;
     }
 
     .footer-author {
@@ -200,15 +260,15 @@
       display: none !important;
     }
 
-    /* Модальное окно полноэкранного режима для доски */
+    /* Абсолютно плотное полноэкранное окно без прозрачности */
     .fullscreen-modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: var(--white);
-      z-index: 9999;
+      background-color: #ffffff !important;
+      z-index: 9999999;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -217,30 +277,41 @@
     }
 
     .fullscreen-modal .qr-title {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: var(--deep-accent);
       margin-bottom: 24px;
+      text-align: center;
+      max-width: 80%;
     }
 
     .fullscreen-modal #qrcode-fs {
-      transform: scale(1.5);
-      margin-bottom: 40px;
+      transform: scale(1.3);
+      margin-bottom: 32px;
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
 
     .fullscreen-modal .watermark {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
+      color: #555;
+      font-style: italic;
     }
 
     .btn-close-fs {
       position: absolute;
-      top: 20px;
-      right: 20px;
+      top: 24px;
+      right: 24px;
       background: var(--deep-accent);
-      color: white;
+      color: #ffffff;
       border: none;
-      padding: 10px 18px;
+      padding: 12px 20px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -260,7 +331,7 @@
     <input type="text" id="qr-title-input" placeholder="Введите или выберите шаблон ниже">
     <div class="preset-buttons">
       <button type="button" class="preset-btn" onclick="setPreset('📝 Домашнее задание')">📝 ДЗ</button>
-      <button type="button" class="preset-btn" onclick="setPreset('🧪 Практическая работа')">🧪 Практическая</button>
+      <button type="button" class="preset-btn" onclick="setPreset('⚙️ Практическая работа')">⚙️ Практическая</button>
       <button type="button" class="preset-btn" onclick="setPreset('📚 Материалы к уроку')">📚 Материалы</button>
       <button type="button" class="preset-btn" onclick="setPreset('🎥 Посмотреть видео')">🎥 Видео</button>
       <button type="button" class="preset-btn" onclick="setPreset('📊 Опрос / Тест')">📊 Тест</button>
@@ -268,12 +339,12 @@
   </div>
 
   <div class="form-group">
-    <label for="qr-hint-select">Подсказка для учеников:</label>
-    <select id="qr-hint-select">
-      <option value="📱 Наведите камеру телефона, чтобы открыть ссылку">📱 Наведите камеру телефона</option>
-      <option value="📲 Сканируйте через Сферум / VK Мессенджер">📲 Сканируйте через Сферум / VK</option>
-      <option value="⏳ Откройте ссылку до конца урока">⏳ Откройте ссылку до конца урока</option>
-    </select>
+    <label>Стиль оформления карточки:</label>
+    <div class="theme-selector">
+      <button type="button" class="theme-btn active" onclick="setTheme('cozy', this)">🌸 Нежная</button>
+      <button type="button" class="theme-btn" onclick="setTheme('board', this)">🟩 Доска</button>
+      <button type="button" class="theme-btn" onclick="setTheme('notebook', this)">✏️ Тетрадь</button>
+    </div>
   </div>
 
   <button class="btn" id="btn-generate">Сгенерировать QR-код</button>
@@ -283,7 +354,7 @@
     <div id="qr-card-to-download" class="qr-card">
       <div id="qr-display-title" class="qr-title"></div>
       <div id="qrcode"></div>
-      <div id="qr-display-hint" class="watermark"></div>
+      <div class="watermark">📱 Наведите камеру телефона, чтобы открыть ссылку</div>
     </div>
 
     <!-- Кнопки действий -->
@@ -299,12 +370,12 @@
   </div>
 </div>
 
-<!-- Полноэкранный режим для доски -->
+<!-- Полноэкранный режим для интерактивной доски -->
 <div id="fullscreen-modal" class="fullscreen-modal hidden">
   <button class="btn-close-fs" id="btn-close-fs">✕ Закрыть</button>
   <div id="fs-title" class="qr-title"></div>
   <div id="qrcode-fs"></div>
-  <div id="fs-hint" class="watermark"></div>
+  <div class="watermark">📱 Наведите камеру телефона, чтобы открыть ссылку</div>
 </div>
 
 <script>
@@ -314,17 +385,29 @@
     document.getElementById('qr-title-input').value = text;
   }
 
+  function setTheme(themeName, btnElem) {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btnElem.classList.add('active');
+
+    const card = document.getElementById('qr-card-to-download');
+    card.classList.remove('theme-board', 'theme-notebook');
+
+    if (themeName === 'board') {
+      card.classList.add('theme-board');
+    } else if (themeName === 'notebook') {
+      card.classList.add('theme-notebook');
+    }
+  }
+
   document.getElementById('btn-generate').onclick = function() {
     currentUrl = document.getElementById('qr-text').value.trim();
     const title = document.getElementById('qr-title-input').value.trim();
-    const hint = document.getElementById('qr-hint-select').value;
 
     if (!currentUrl || currentUrl === 'https://') {
       alert('Пожалуйста, введите корректную ссылку!');
       return;
     }
 
-    // Очищаем и создаем обычный QR
     const qrContainer = document.getElementById('qrcode');
     qrContainer.innerHTML = '';
     new QRCode(qrContainer, {
@@ -344,7 +427,6 @@
       titleElem.classList.add('hidden');
     }
 
-    document.getElementById('qr-display-hint').textContent = hint;
     document.getElementById('result-container').classList.remove('hidden');
   };
 
@@ -366,7 +448,6 @@
   // Полноэкранный режим для доски
   document.getElementById('btn-fullscreen').onclick = function() {
     const title = document.getElementById('qr-title-input').value.trim();
-    const hint = document.getElementById('qr-hint-select').value;
 
     const fsQrContainer = document.getElementById('qrcode-fs');
     fsQrContainer.innerHTML = '';
@@ -380,11 +461,12 @@
     });
 
     document.getElementById('fs-title').textContent = title;
-    document.getElementById('fs-hint').textContent = hint;
+    document.body.classList.add('no-scroll');
     document.getElementById('fullscreen-modal').classList.remove('hidden');
   };
 
   document.getElementById('btn-close-fs').onclick = function() {
+    document.body.classList.remove('no-scroll');
     document.getElementById('fullscreen-modal').classList.add('hidden');
   };
 </script>
