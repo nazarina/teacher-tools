@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр по математике: Доли | Кот и Код</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-color: #d4f6fa;
+            --main-teal: #008080;
+            --burgundy: #800000;
+            --burgundy-light: #b30000;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pulse-btn {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .transition-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Стиль для математической дроби */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+        .fraction-num {
+            border-bottom: 2px solid currentColor;
+            padding: 0 4px;
+        }
+        .fraction-den {
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between py-6 px-4">
+
+    <main class="flex-grow flex items-center justify-center w-full max-w-2xl mx-auto">
+        <div class="w-full bg-white rounded-3xl shadow-xl border border-teal-100 p-6 space-y-6 relative overflow-hidden">
+            
+            <!-- Шапка -->
+            <div class="text-center relative">
+                <button onclick="resetAllProgress()" class="absolute top-0 right-0 text-gray-300 hover:text-gray-500 transition-colors" title="Сбросить прогресс на 1 день">
+                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                </button>
+                <div class="w-16 h-16 mx-auto mb-2 bg-teal-50 rounded-2xl flex items-center justify-center border-2 border-[var(--main-teal)] shadow-sm">
+                    <i class="fa-solid fa-chart-pie text-3xl text-[var(--main-teal)]"></i>
+                </div>
+                <h1 class="text-xl font-extrabold text-gray-800 tracking-tight">Кот и Код</h1>
+                <p class="text-xs font-semibold text-[var(--main-teal)] uppercase tracking-wider">Наглядный тренажёр: Доли и Дроби</p>
+                
+                <div class="mt-3 inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full text-xs font-bold text-teal-800">
+                    <i class="fa-solid fa-calendar-day text-[var(--main-teal)]"></i>
+                    <span id="day-indicator">День 1 из 30</span>
+                </div>
+            </div>
+
+            <!-- Контейнер поэтапных заданий -->
+            <div id="tasks-container" class="space-y-6">
+
+                <!-- ШАГ 1: Запиши дробь по рисунку -->
+                <section id="step-1" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">1</span>
+                            Задание 1. Какая часть фигуры закрашена?
+                        </h2>
+                    </div>
+
+                    <div id="visual-fractions-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Заполняется динамически SVG-рисунками -->
+                    </div>
+
+                    <button onclick="checkStep(1)" class="w-full py-2.5 px-4 bg-[var(--main-teal)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom">
+                        Проверить задание 1
+                    </button>
+                </section>
+
+                <!-- ШАГ 2: Сравнение долей -->
+                <section id="step-2" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4 hidden">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">2</span>
+                            Задание 2. Сравни доли (&gt;, &lt; или =)
+                        </h2>
+                    </div>
+
+                    <!-- Шпоры/подсказки по сравнению -->
+                    <div class="bg-teal-50 border border-teal-200 p-2.5 rounded-xl text-xs">
+                        <button onclick="toggleHint('hint-compare')" class="font-bold text-[var(--main-teal)] flex items-center justify-between w-full">
+                            <span><i class="fa-solid fa-lightbulb mr-1"></i>Подсказка: как сравнивать доли?</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="hint-compare" class="hidden mt-2 text-[11px] text-slate-700 bg-white p-2.5 rounded-lg border border-teal-100 leading-relaxed">
+                            Чем на большее количество частей разрезали пирог, тем <b>меньше</b> получается один кусочек! Посмотри на схемы ниже.
+                        </div>
+                    </div>
+
+                    <div id="compare-list" class="space-y-3">
+                        <!-- Динамически заполняется -->
+                    </div>
+
+                    <button onclick="checkStep(2)" class="w-full py-2.5 px-4 bg-[var(--main-teal)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom">
+                        Проверить задание 2
+                    </button>
+                </section>
+
+                <!-- ШАГ 3: Нахождение доли от числа -->
+                <section id="step-3" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4 hidden">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">3</span>
+                            Задание 3. Найди часть от числа
+                        </h2>
+                    </div>
+
+                    <div id="word-problems-list" class="space-y-4">
+                        <!-- Динамически заполняется -->
+                    </div>
+
+                    <button onclick="checkStep(3)" class="w-full py-2.5 px-4 bg-[var(--burgundy)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom pulse-btn">
+                        Проверить и завершить день
+                    </button>
+                </section>
+
+            </div>
+
+            <!-- Экран успеха -->
+            <div id="completion-screen" class="hidden text-center py-8 space-y-4">
+                <div class="text-6xl">🍕</div>
+                <h2 class="text-2xl font-extrabold text-slate-800">Замечательно!</h2>
+                <p class="text-sm text-slate-600 font-medium">Ты отлично разбираешься в долях и дробях! Возвращайся завтра.</p>
+                <button onclick="nextDay()" class="mt-4 text-white font-extrabold py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md hover:opacity-95 transition-custom text-sm">
+                    Перейти к следующему дню <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Сообщение об ошибке/подсказка -->
+            <div id="global-result" class="hidden text-center p-3 rounded-xl text-xs font-bold transition-custom border"></div>
+
+        </div>
+    </main>
+
+    <footer class="w-full text-center text-[10px] text-teal-800/60 font-medium mt-4">
+        Мастерская IT-обучения «Кот и Код»
+    </footer>
+
+    <script>
+        // Генератор SVG круговой диаграммы (пиццы/пирога)
+        function createPieSVG(total, filled) {
+            let paths = '';
+            const cx = 50, cy = 50, r = 40;
+            
+            if (total === 1) {
+                return `<svg viewBox="0 0 100 100" class="w-20 h-20 mx-auto">
+                    <circle cx="50" cy="50" r="40" fill="${filled ? '#008080' : '#e2e8f0'}" stroke="#008080" stroke-width="2"/>
+                </svg>`;
+            }
+
+            for (let i = 0; i < total; i++) {
+                const startAngle = (i * 360 / total) - 90;
+                const endAngle = ((i + 1) * 360 / total) - 90;
+                
+                const x1 = cx + r * Math.cos(Math.PI * startAngle / 180);
+                const y1 = cy + r * Math.sin(Math.PI * startAngle / 180);
+                const x2 = cx + r * Math.cos(Math.PI * endAngle / 180);
+                const y2 = cy + r * Math.sin(Math.PI * endAngle / 180);
+                
+                const largeArcFlag = (endAngle - startAngle) > 180 ? 1 : 0;
+                const fillColor = i < filled ? '#008080' : '#f1f5f9';
+                
+                paths += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2} Z" 
+                          fill="${fillColor}" stroke="#008080" stroke-width="1.5" />`;
+            }
+            
+            return `<svg viewBox="0 0 100 100" class="w-20 h-20 mx-auto drop-shadow-sm">${paths}</svg>`;
+        }
+
+        // База данных заданий на 30 дней
+        const database30Days = [
+            // День 1
+            {
+                task1: [
+                    { total: 4, filled: 1 },
+                    { total: 3, filled: 2 }
+                ],
+                task2: [
+                    { num1: 1, den1: 2, num2: 1, den2: 4, correct: ">" },
+                    { num1: 1, den1: 3, num2: 2, den2: 3, correct: "<" }
+                ],
+                task3: [
+                    { item: "🍎", count: 12, partNum: 1, partDen: 3, word: "яблок", correct: 4, formulaHint: "Чтобы найти 1/3 от 12, нужно 12 разделить на 3." }
+                ]
+            },
+            // День 2
+            {
+                task1: [
+                    { total: 6, filled: 5 },
+                    { total: 2, filled: 1 }
+                ],
+                task2: [
+                    { num1: 1, den1: 6, num2: 1, den2: 3, correct: "<" },
+                    { num1: 3, den1: 4, num2: 1, den2: 4, correct: ">" }
+                ],
+                task3: [
+                    { item: "🐟", count: 15, partNum: 1, partDen: 5, word: "рыбок", correct: 3, formulaHint: "Чтобы найти 1/5 от 15, нужно 15 разделить на 5." }
+                ]
+            },
+            // День 3
+            {
+                task1: [
+                    { total: 8, filled: 3 },
+                    { total: 5, filled: 4 }
+                ],
+                task2: [
+                    { num1: 2, den1: 5, num2: 4, den2: 5, correct: "<" },
+                    { num1: 1, den1: 2, num2: 2, den2: 4, correct: "=" }
+                ],
+                task3: [
+                    { item: "🍬", count: 16, partNum: 1, partDen: 4, word: "конфет", correct: 4, formulaHint: "Чтобы найти 1/4 от 16, нужно 16 разделить на 4." }
+                ]
+            }
+        ];
+
+        // Автогенератор для остатка 30 дней
+        (function generateFull30Days() {
+            for (let d = database30Days.length; d < 30; d++) {
+                const denA = (d % 6) + 3;
+                const fillA = (d % (denA - 1)) + 1;
+                database30Days.push({
+                    task1: [
+                        { total: denA, filled: fillA },
+                        { total: 4, filled: 3 }
+                    ],
+                    task2: [
+                        { num1: 1, den1: denA, num2: 1, den2: denA + 1, correct: ">" },
+                        { num1: 2, den1: 6, num2: 5, den2: 6, correct: "<" }
+                    ],
+                    task3: [
+                        { item: "⭐", count: (d + 2) * 2, partNum: 1, partDen: 2, word: "звёздочек", correct: d + 2, formulaHint: "Раздели общее количество на знаменатель." }
+                    ]
+                });
+            }
+        })();
+
+        let currentDayIndex = 0;
+
+        function initDay(dayIndex) {
+            currentDayIndex = dayIndex;
+            document.getElementById('day-indicator').innerText = `День ${dayIndex + 1} из 30`;
+            const dayData = database30Days[dayIndex];
+
+            // --- ШАГ 1: Запиши дробь ---
+            const visualList = document.getElementById('visual-fractions-list');
+            visualList.innerHTML = '';
+            dayData.task1.forEach((item, idx) => {
+                const box = document.createElement('div');
+                box.className = "bg-white p-3 rounded-xl border border-teal-100 flex flex-col items-center gap-3 shadow-sm";
+                box.innerHTML = `
+                    ${createPieSVG(item.total, item.filled)}
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <span>Закрашено:</span>
+                        <div class="fraction text-teal-800">
+                            <input type="number" id="t1-${idx}-num" placeholder="?" class="fraction-num w-8 text-center bg-teal-50 border border-teal-200 rounded py-0.5 focus:outline-none">
+                            <input type="number" id="t1-${idx}-den" placeholder="?" class="fraction-den w-8 text-center bg-teal-50 border border-teal-200 rounded py-0.5 mt-0.5 focus:outline-none">
+                        </div>
+                    </div>
+                `;
+                visualList.appendChild(box);
+            });
+
+            // --- ШАГ 2: Сравнение ---
+            const compareList = document.getElementById('compare-list');
+            compareList.innerHTML = '';
+            dayData.task2.forEach((item, idx) => {
+                const box = document.createElement('div');
+                box.className = "bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-around shadow-sm";
+                box.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        ${createPieSVG(item.den1, item.num1)}
+                        <div class="fraction text-base text-teal-900">
+                            <span class="fraction-num">${item.num1}</span>
+                            <span class="fraction-den">${item.den1}</span>
+                        </div>
+                    </div>
+
+                    <select id="t2-select-${idx}" class="text-sm font-bold p-2 bg-teal-50 border border-teal-300 rounded-xl focus:outline-none">
+                        <option value="">?</option>
+                        <option value=">">&gt;</option>
+                        <option value="<">&lt;</option>
+                        <option value="=">=</option>
+                    </select>
+
+                    <div class="flex items-center gap-3">
+                        <div class="fraction text-base text-teal-900">
+                            <span class="fraction-num">${item.num2}</span>
+                            <span class="fraction-den">${item.den2}</span>
+                        </div>
+                        ${createPieSVG(item.den2, item.num2)}
+                    </div>
+                `;
+                compareList.appendChild(box);
+            });
+
+            // --- ШАГ 3: Задачи ---
+            const wordList = document.getElementById('word-problems-list');
+            wordList.innerHTML = '';
+            dayData.task3.forEach((item, idx) => {
+                const itemsVisual = Array(item.count).fill(item.item).join(' ');
+                const box = document.createElement('div');
+                box.className = "bg-white p-4 rounded-xl border border-teal-100 space-y-3 shadow-sm";
+                box.innerHTML = `
+                    <div class="text-xs font-semibold text-slate-800">
+                        Найди <div class="fraction text-xs"><span class="fraction-num">${item.partNum}</span><span class="fraction-den">${item.partDen}</span></div> от ${item.count} ${item.word}:
+                    </div>
+
+                    <div class="bg-teal-50/50 p-2.5 rounded-lg text-lg tracking-widest text-center border border-teal-100/50">
+                        ${itemsVisual}
+                    </div>
+
+                    <!-- Индивидуальная подсказка -->
+                    <div class="bg-teal-50 border border-teal-200 p-2 rounded-lg text-xs">
+                        <button onclick="toggleHint('hint-word-${idx}')" class="font-bold text-[var(--main-teal)] flex items-center justify-between w-full">
+                            <span><i class="fa-solid fa-lightbulb mr-1"></i>Подсказка к решению</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="hint-word-${idx}" class="hidden mt-1.5 text-[11px] text-slate-700 bg-white p-2 rounded border border-teal-100">
+                            ${item.formulaHint}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-700 pt-1">
+                        <span>Ответ:</span>
+                        <input type="number" id="t3-ans-${idx}" placeholder="?" class="w-16 p-1.5 text-center bg-slate-50 border border-gray-300 rounded-lg focus:outline-none focus:border-[var(--main-teal)]">
+                        <span>${item.word}</span>
+                    </div>
+                `;
+                wordList.appendChild(box);
+            });
+
+            // Видимость шагов
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('tasks-container').classList.remove('hidden');
+            document.getElementById('completion-screen').classList.add('hidden');
+            document.getElementById('global-result').classList.add('hidden');
+        }
+
+        function toggleHint(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function checkStep(stepNumber) {
+            const dayData = database30Days[currentDayIndex];
+            const resBox = document.getElementById('global-result');
+            resBox.classList.add('hidden');
+            let isStepValid = true;
+            let hasEmpty = false;
+
+            if (stepNumber === 1) {
+                dayData.task1.forEach((item, idx) => {
+                    const numInput = document.getElementById(`t1-${idx}-num`);
+                    const denInput = document.getElementById(`t1-${idx}-den`);
+                    
+                    const numVal = parseInt(numInput.value);
+                    const denVal = parseInt(denInput.value);
+
+                    if (isNaN(numVal) || isNaN(denVal)) {
+                        hasEmpty = true;
+                        numInput.className = "fraction-num w-8 text-center bg-amber-50 border-2 border-amber-300 rounded py-0.5";
+                        denInput.className = "fraction-den w-8 text-center bg-amber-50 border-2 border-amber-300 rounded py-0.5 mt-0.5";
+                    } else if (numVal === item.filled && denVal === item.total) {
+                        numInput.className = "fraction-num w-8 text-center bg-emerald-50 border-2 border-emerald-500 rounded py-0.5 text-emerald-800 font-bold";
+                        denInput.className = "fraction-den w-8 text-center bg-emerald-50 border-2 border-emerald-500 rounded py-0.5 mt-0.5 text-emerald-800 font-bold";
+                    } else {
+                        isStepValid = false;
+                        numInput.className = "fraction-num w-8 text-center bg-rose-50 border-2 border-rose-400 rounded py-0.5 text-rose-800 font-bold";
+                        denInput.className = "fraction-den w-8 text-center bg-rose-50 border-2 border-rose-400 rounded py-0.5 mt-0.5 text-rose-800 font-bold";
+                    }
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Заполни числитель и знаменатель для всех фигур!" : "Некоторые дроби записаны неверно!");
+                    return;
+                }
+
+                document.getElementById('step-2').classList.remove('hidden');
+                document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
+
+            } else if (stepNumber === 2) {
+                dayData.task2.forEach((item, idx) => {
+                    const select = document.getElementById(`t2-select-${idx}`);
+                    if (!select.value) {
+                        hasEmpty = true;
+                        select.className = "text-sm font-bold p-2 bg-amber-50 border-2 border-amber-300 rounded-xl";
+                    } else if (select.value === item.correct) {
+                        select.className = "text-sm font-bold p-2 bg-emerald-50 border-2 border-emerald-500 text-emerald-800 rounded-xl";
+                    } else {
+                        isStepValid = false;
+                        select.className = "text-sm font-bold p-2 bg-rose-50 border-2 border-rose-400 text-rose-800 rounded-xl";
+                    }
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Выбери знаки сравнения!" : "Знаки сравнения поставлены ошибочно!");
+                    return;
+                }
+
+                document.getElementById('step-3').classList.remove('hidden');
+                document.getElementById('step-3').scrollIntoView({ behavior: 'smooth' });
+
+            } else if (stepNumber === 3) {
+                dayData.task3.forEach((item, idx) => {
+                    const input = document.getElementById(`t3-ans-${idx}`);
+                    const val = parseInt(input.value);
+
+                    if (isNaN(val)) {
+                        hasEmpty = true;
+                        input.className = "w-16 p-1.5 text-center bg-amber-50 border-2 border-amber-300 rounded-lg";
+                    } else if (val === item.correct) {
+                        input.className = "w-16 p-1.5 text-center bg-emerald-50 border-2 border-emerald-500 text-emerald-800 font-bold rounded-lg";
+                    } else {
+                        isStepValid = false;
+                        input.className = "w-16 p-1.5 text-center bg-rose-50 border-2 border-rose-400 text-rose-800 font-bold rounded-lg";
+                    }
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Впиши ответ в задачу!" : "Ответ в задаче неверный!");
+                    return;
+                }
+
+                // Успешный финал
+                document.getElementById('tasks-container').classList.add('hidden');
+                document.getElementById('completion-screen').classList.remove('hidden');
+
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#008080', '#800000', '#ffd700', '#22c55e']
+                });
+            }
+        }
+
+        function showError(msg) {
+            const resBox = document.getElementById('global-result');
+            resBox.classList.remove('hidden');
+            resBox.className = "text-center p-3 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border-rose-200 mt-4";
+            resBox.innerHTML = `🧐 ${msg}`;
+        }
+
+        function nextDay() {
+            if (currentDayIndex < 29) {
+                currentDayIndex++;
+                localStorage.setItem('math_trainer_day', currentDayIndex);
+                initDay(currentDayIndex);
+            } else {
+                alert("Ура! Весь курс математики успешно пройден!");
+            }
+        }
+
+        function resetAllProgress() {
+            localStorage.setItem('math_trainer_day', 0);
+            initDay(0);
+        }
+
+        window.onload = function() {
+            const savedDay = parseInt(localStorage.getItem('math_trainer_day')) || 0;
+            initDay(savedDay);
+        };
+    </script>
+</body>
+</html>
