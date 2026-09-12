@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр по русскому языку | Кот и Код</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-color: #d4f6fa;
+            --main-teal: #008080;
+            --burgundy: #800000;
+            --burgundy-light: #b30000;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pulse-btn {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .transition-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between py-6 px-4">
+
+    <main class="flex-grow flex items-center justify-center w-full max-w-2xl mx-auto">
+        <div class="w-full bg-white rounded-3xl shadow-xl border border-teal-100 p-6 space-y-6 relative overflow-hidden">
+            
+            <!-- Шапка -->
+            <div class="text-center relative">
+                <button onclick="resetAllProgress()" class="absolute top-0 right-0 text-gray-300 hover:text-gray-500 transition-colors" title="Сбросить прогресс на 1 день">
+                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                </button>
+                <div class="w-16 h-16 mx-auto mb-2 bg-teal-50 rounded-2xl flex items-center justify-center border-2 border-[var(--main-teal)] shadow-sm">
+                    <i class="fa-solid fa-cat text-3xl text-[var(--main-teal)]"></i>
+                </div>
+                <h1 class="text-xl font-extrabold text-gray-800 tracking-tight">Кот и Код</h1>
+                <p class="text-xs font-semibold text-[var(--main-teal)] uppercase tracking-wider">Ежедневный тренажёр по русскому языку</p>
+                
+                <div class="mt-3 inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full text-xs font-bold text-teal-800">
+                    <i class="fa-solid fa-calendar-day text-[var(--main-teal)]"></i>
+                    <span id="day-indicator">День 1 из 30</span>
+                </div>
+            </div>
+
+            <!-- Контейнер поэтапных заданий -->
+            <div id="tasks-container" class="space-y-6">
+
+                <!-- ШАГ 1: Падежи -->
+                <section id="step-1" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                    <div class="border-b border-slate-200 pb-2 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">1</span>
+                            Задание 1. Просклоняй слово по падежам
+                        </h2>
+                    </div>
+                    <div class="bg-white border border-teal-100 rounded-xl p-3 text-center shadow-sm">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-teal-600 block mb-0.5">Слово:</span>
+                        <span class="text-2xl font-extrabold text-[var(--burgundy)] uppercase" id="t1-word">КОТ</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Именительный <span class="font-normal text-gray-400 block text-[10px]">(есть)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">кто? что?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-nom" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Родительный <span class="font-normal text-gray-400 block text-[10px]">(нет)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">кого? чего?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-rod" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Дательный <span class="font-normal text-gray-400 block text-[10px]">(рад)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">кому? чему?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-dat" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Винительный <span class="font-normal text-gray-400 block text-[10px]">(вижу)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">кого? что?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-vin" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Творительный <span class="font-normal text-gray-400 block text-[10px]">(доволен)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">кем? чем?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-tvor" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100">
+                            <div class="col-span-4 font-bold text-xs text-teal-900">Предложный <span class="font-normal text-gray-400 block text-[10px]">(думаю о)</span></div>
+                            <div class="col-span-3 text-[11px] text-gray-500">о ком? о чём?</div>
+                            <div class="col-span-5 relative">
+                                <input type="text" id="t1-p-pred" placeholder="..." autocomplete="off" class="w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]">
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="checkStep(1)" class="w-full py-2.5 px-4 bg-[var(--main-teal)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom">
+                        Проверить задание 1
+                    </button>
+                </section>
+
+                <!-- ШАГ 2: Части речи -->
+                <section id="step-2" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4 hidden">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">2</span>
+                            Задания 2 и 3. Определи части речи
+                        </h2>
+                    </div>
+                    <div class="space-y-3" id="parts-of-speech-list">
+                        <!-- Динамически заполняется -->
+                    </div>
+                    <button onclick="checkStep(2)" class="w-full py-2.5 px-4 bg-[var(--main-teal)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom">
+                        Проверить задание 2 и 3
+                    </button>
+                </section>
+
+                <!-- ШАГ 3: Разбор по составу -->
+                <section id="step-3" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4 hidden">
+                    <div class="border-b border-slate-200 pb-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="bg-[var(--burgundy)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">3</span>
+                            Задания 4 и 5. Разбор слов по составу
+                        </h2>
+                    </div>
+                    <div class="space-y-6 pt-2" id="morpheme-words-list">
+                        <!-- Динамически заполняется карточками с персональными подсказками -->
+                    </div>
+                    <button onclick="checkStep(3)" class="w-full py-2.5 px-4 bg-[var(--burgundy)] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-custom pulse-btn">
+                        Проверить и завершить день
+                    </button>
+                </section>
+
+            </div>
+
+            <!-- Экран успеха по окончанию дня -->
+            <div id="completion-screen" class="hidden text-center py-8 space-y-4">
+                <div class="text-6xl">🎉</div>
+                <h2 class="text-2xl font-extrabold text-slate-800">На сегодня это всё, ты молодец!</h2>
+                <p class="text-sm text-slate-600 font-medium">Все задания дня успешно выполнены. Возвращайся завтра!</p>
+                <button onclick="nextDay()" class="mt-4 text-white font-extrabold py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md hover:opacity-95 transition-custom text-sm">
+                    Перейти к следующему дню <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Сообщение об ошибке/заполнении -->
+            <div id="global-result" class="hidden text-center p-3 rounded-xl text-xs font-bold transition-custom border"></div>
+
+        </div>
+    </main>
+
+    <footer class="w-full text-center text-[10px] text-teal-800/60 font-medium mt-4">
+        Мастерская IT-обучения «Кот и Код»
+    </footer>
+
+    <script>
+        const partsOfSpeechOptions = [
+            "Существительное (кто? что?)",
+            "Прилагательное (какой?)",
+            "Глагол (что делает?)",
+            "Наречие (как?)",
+            "Местоимение (кто? какой? указывает)",
+            "Числительное (сколько? какой по счёту?)",
+            "Предлог (в, на, к, с, под)",
+            "Союз (и, а, но, что, чтобы)"
+        ];
+
+        // Расширенная база данных
+        const database30Days = [
+            {
+                task1: {
+                    nominative: "кот",
+                    answers: {
+                        't1-p-nom': ["кот"],
+                        't1-p-rod': ["кота"],
+                        't1-p-dat': ["коту"],
+                        't1-p-vin': ["кота"],
+                        't1-p-tvor': ["котом"],
+                        't1-p-pred': ["коте"]
+                    }
+                },
+                task2_3: [
+                    { word: "домик", pos: "Существительное (кто? что?)"},
+                    { word: "он", pos: "Местоимение (кто? какой? указывает)"},
+                    { word: "пять", pos: "Числительное (сколько? какой по счёту?)"},
+                    { word: "и", pos: "Союз (и, а, но, что, чтобы)"}
+                ],
+                task4_5: [
+                    { word: "поездка", prefix: "по", root: "езд", suffix: "к", ending: "а", base: "поездк", rel: "езда, ездить, выезд", hintText: "Изменяем: поездку, поездки (окончание -а). Однокоренные: езда, выезд." },
+                    { word: "подводный", prefix: "под", root: "вод", suffix: "н", ending: "ый", base: "подводн", rel: "вода, водичка, подводник", hintText: "Изменяем: подводного, подводным (окончание -ый). Однокоренные: вода, водичка." }
+                ]
+            },
+            {
+                task1: {
+                    nominative: "книга",
+                    answers: {
+                        't1-p-nom': ["книга"],
+                        't1-p-rod': ["книги"],
+                        't1-p-dat': ["книге"],
+                        't1-p-vin': ["книгу"],
+                        't1-p-tvor': ["книгой", "книгою"],
+                        't1-p-pred': ["книге"]
+                    }
+                },
+                task2_3: [
+                    { word: "в", pos: "Предлог (в, на, к, с, под)"},
+                    { word: "умный", pos: "Прилагательное (какой?)"},
+                    { word: "мы", pos: "Местоимение (кто? какой? указывает)"},
+                    { word: "громко", pos: "Наречие (как?)"}
+                ],
+                task4_5: [
+                    { word: "залесок", prefix: "за", root: "лес", suffix: "ок", ending: "-", base: "залесок", rel: "лес, лесной, лесничий", hintText: "Окончание нулевое (-). Однокоренные слова: лес, лесной." },
+                    { word: "подарок", prefix: "по", root: "дар", suffix: "ок", ending: "-", base: "подарок", rel: "дар, дарить, подарить", hintText: "Окончание нулевое (-). Однокоренные слова: дар, дарить." }
+                ]
+            }
+        ];
+
+        // Заполнение остатка до 30 дней
+        (function generateFull30Days() {
+            const sampleWords = ["леса", "река", "школа", "море", "трава", "птица", "друг", "лиса", "слон", "город"];
+            for (let d = database30Days.length; d < 30; d++) {
+                const w = sampleWords[d % sampleWords.length];
+                database30Days.push({
+                    task1: {
+                        nominative: w,
+                        answers: {
+                            't1-p-nom': [w],
+                            't1-p-rod': [w + "ы"],
+                            't1-p-dat': [w + "е"],
+                            't1-p-vin': [w + "у"],
+                            't1-p-tvor': [w + "ой"],
+                            't1-p-pred': [w + "е"]
+                        }
+                    },
+                    task2_3: [
+                        { word: "слово" + (d+1), pos: partsOfSpeechOptions[0] },
+                        { word: "второй", pos: partsOfSpeechOptions[5] },
+                        { word: "под", pos: partsOfSpeechOptions[6] },
+                        { word: "но", pos: partsOfSpeechOptions[7] }
+                    ],
+                    task4_5: [
+                        { word: "побег", prefix: "по", root: "бег", suffix: "-", ending: "-", base: "побег", rel: "бегать, бег, пробежка", hintText: "Приставка по-, корень -бег-. Окончание нулевое." },
+                        { word: "избушка", prefix: "-", root: "изб", suffix: "ушк", ending: "а", base: "избушк", rel: "изба, избёнка", hintText: "Корень -изб-, суффикс -ушк-, окончание -а." }
+                    ]
+                });
+            }
+        })();
+
+        let currentDayIndex = 0;
+
+        function initDay(dayIndex) {
+            currentDayIndex = dayIndex;
+            document.getElementById('day-indicator').innerText = `День ${dayIndex + 1} из 30`;
+            
+            const dayData = database30Days[dayIndex];
+
+            // 1. Сброс и запуск Шага 1
+            document.getElementById('t1-word').innerText = dayData.task1.nominative;
+            const t1Inputs = ['t1-p-nom', 't1-p-rod', 't1-p-dat', 't1-p-vin', 't1-p-tvor', 't1-p-pred'];
+            t1Inputs.forEach(id => {
+                const inp = document.getElementById(id);
+                inp.value = '';
+                inp.className = "w-full text-xs font-semibold py-1.5 px-2 rounded-lg border border-gray-300 text-center focus:outline-none focus:border-[var(--main-teal)]";
+            });
+
+            // 2. Подготовка Шага 2
+            const posContainer = document.getElementById('parts-of-speech-list');
+            posContainer.innerHTML = '';
+            dayData.task2_3.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = "grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm";
+                row.innerHTML = `
+                    <div class="col-span-5 font-bold text-xs text-slate-800">${idx + 1}. ${item.word}</div>
+                    <div class="col-span-7">
+                        <select id="pos-select-${idx}" class="w-full text-xs font-medium py-1.5 px-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:border-[var(--main-teal)]">
+                            <option value="">выберите...</option>
+                            ${partsOfSpeechOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                posContainer.appendChild(row);
+            });
+
+            // 3. Подготовка Шага 3 (Разбор по составу + ИНДИВИДУАЛЬНЫЕ ПОДСКАЗКИ)
+            const morphContainer = document.getElementById('morpheme-words-list');
+            morphContainer.innerHTML = '';
+            dayData.task4_5.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl border border-teal-100 space-y-3 shadow-sm";
+                card.innerHTML = `
+                    <div class="text-center">
+                        <span class="text-[10px] font-bold text-teal-600 uppercase">Слово ${idx + 1}:</span>
+                        <div class="text-lg font-extrabold text-[var(--burgundy)] uppercase">${item.word}</div>
+                    </div>
+
+                    <!-- Индивидуальная подсказка для этого слова -->
+                    <div class="bg-teal-50 border border-teal-200 p-2.5 rounded-xl text-xs">
+                        <button onclick="toggleHint('hint-word-${idx}')" class="font-bold text-[var(--main-teal)] flex items-center justify-between w-full">
+                            <span><i class="fa-solid fa-lightbulb mr-1"></i>Подсказка к слову «${item.word}»</span>
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="hint-word-${idx}" class="hidden mt-2 text-[11px] text-slate-700 bg-white p-2.5 rounded-lg border border-teal-100 space-y-1">
+                            <div><b>Однокоренные:</b> ${item.rel}</div>
+                            <div><b>Разбор:</b> ${item.hintText}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Приставка</label>
+                            <input type="text" id="m-${idx}-pref" placeholder="нет: -" class="w-full text-xs font-semibold p-1.5 rounded-lg border border-gray-300 text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Корень</label>
+                            <input type="text" id="m-${idx}-root" placeholder="..." class="w-full text-xs font-semibold p-1.5 rounded-lg border border-gray-300 text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Суффикс</label>
+                            <input type="text" id="m-${idx}-suf" placeholder="нет: -" class="w-full text-xs font-semibold p-1.5 rounded-lg border border-gray-300 text-center">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Окончание</label>
+                            <input type="text" id="m-${idx}-end" placeholder="нет: -" class="w-full text-xs font-semibold p-1.5 rounded-lg border border-gray-300 text-center">
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Основа</label>
+                            <input type="text" id="m-${idx}-base" placeholder="..." class="w-full text-xs font-semibold p-1.5 rounded-lg border border-gray-300 text-center">
+                        </div>
+                    </div>
+                `;
+                morphContainer.appendChild(card);
+            });
+
+            // Восстановление видимости шагов
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('tasks-container').classList.remove('hidden');
+            document.getElementById('completion-screen').classList.add('hidden');
+            document.getElementById('global-result').classList.add('hidden');
+        }
+
+        function toggleHint(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function cleanStr(str) {
+            return str.trim().toLowerCase().replace(/ё/g, 'е');
+        }
+
+        function checkStep(stepNumber) {
+            const dayData = database30Days[currentDayIndex];
+            const resBox = document.getElementById('global-result');
+            resBox.classList.add('hidden');
+            let isStepValid = true;
+            let hasEmpty = false;
+
+            if (stepNumber === 1) {
+                const t1Inputs = ['t1-p-nom', 't1-p-rod', 't1-p-dat', 't1-p-vin', 't1-p-tvor', 't1-p-pred'];
+                t1Inputs.forEach(id => {
+                    const input = document.getElementById(id);
+                    const val = cleanStr(input.value);
+
+                    if (!val) {
+                        hasEmpty = true;
+                        input.className = "w-full text-xs font-semibold py-1.5 px-2 rounded-lg border-2 border-amber-300 bg-amber-50 text-center";
+                    } else if (dayData.task1.answers[id].map(cleanStr).includes(val)) {
+                        input.className = "w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-800 text-center";
+                    } else {
+                        isStepValid = false;
+                        input.className = "w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 border-rose-400 bg-rose-50 text-rose-800 text-center";
+                    }
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Заполни все падежи!" : "В падежах есть ошибки!");
+                    return;
+                }
+
+                // Переход к шагу 2
+                document.getElementById('step-2').classList.remove('hidden');
+                document.getElementById('step-2').scrollIntoView({ behavior: 'smooth' });
+
+            } else if (stepNumber === 2) {
+                dayData.task2_3.forEach((item, idx) => {
+                    const select = document.getElementById(`pos-select-${idx}`);
+                    if (!select.value) {
+                        hasEmpty = true;
+                        select.className = "w-full text-xs font-medium py-1.5 px-2 rounded-lg border-2 border-amber-300 bg-amber-50";
+                    } else if (select.value === item.pos) {
+                        select.className = "w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-800";
+                    } else {
+                        isStepValid = false;
+                        select.className = "w-full text-xs font-bold py-1.5 px-2 rounded-lg border-2 border-rose-400 bg-rose-50 text-rose-800";
+                    }
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Выбери части речи для всех слов!" : "Части речи определены с ошибками!");
+                    return;
+                }
+
+                // Переход к шагу 3
+                document.getElementById('step-3').classList.remove('hidden');
+                document.getElementById('step-3').scrollIntoView({ behavior: 'smooth' });
+
+            } else if (stepNumber === 3) {
+                dayData.task4_5.forEach((item, idx) => {
+                    const fields = [
+                        { id: `m-${idx}-pref`, ans: item.prefix },
+                        { id: `m-${idx}-root`, ans: item.root },
+                        { id: `m-${idx}-suf`, ans: item.suffix },
+                        { id: `m-${idx}-end`, ans: item.ending },
+                        { id: `m-${idx}-base`, ans: item.base }
+                    ];
+
+                    fields.forEach(f => {
+                        const inp = document.getElementById(f.id);
+                        const val = cleanStr(inp.value);
+
+                        if (!val) {
+                            hasEmpty = true;
+                            inp.className = "w-full text-xs font-semibold p-1.5 rounded-lg border-2 border-amber-300 bg-amber-50 text-center";
+                        } else if (val === cleanStr(f.ans)) {
+                            inp.className = "w-full text-xs font-bold p-1.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-800 text-center";
+                        } else {
+                            isStepValid = false;
+                            inp.className = "w-full text-xs font-bold p-1.5 rounded-lg border-2 border-rose-400 bg-rose-50 text-rose-800 text-center";
+                        }
+                    });
+                });
+
+                if (hasEmpty || !isStepValid) {
+                    showError(hasEmpty ? "Заполни все поля разбора по составу!" : "Разбор слова содержит ошибки!");
+                    return;
+                }
+
+                // Все шаги пройдены — финал дня!
+                document.getElementById('tasks-container').classList.add('hidden');
+                document.getElementById('completion-screen').classList.remove('hidden');
+
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#008080', '#800000', '#ffd700', '#22c55e']
+                });
+            }
+        }
+
+        function showError(msg) {
+            const resBox = document.getElementById('global-result');
+            resBox.classList.remove('hidden');
+            resBox.className = "text-center p-3 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border-rose-200 mt-4";
+            resBox.innerHTML = `🧐 ${msg}`;
+        }
+
+        function nextDay() {
+            if (currentDayIndex < 29) {
+                currentDayIndex++;
+                localStorage.setItem('trainer_day', currentDayIndex);
+                initDay(currentDayIndex);
+            } else {
+                alert("Поздравляем! Ты прошла полный курс 30 дней!");
+            }
+        }
+
+        function resetAllProgress() {
+            localStorage.setItem('trainer_day', 0);
+            initDay(0);
+        }
+
+        window.onload = function() {
+            const savedDay = parseInt(localStorage.getItem('trainer_day')) || 0;
+            initDay(savedDay);
+        };
+    </script>
+</body>
+</html>
