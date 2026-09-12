@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тренажер таблицы умножения и деления</title>
+  <style>
+    :root {
+      --bg-color: #d4f6fa;
+      --main-teal: #008080; /* Морская волна (основной акцент) */
+      --dark-teal: #005a5a;
+      --light-teal: #e6f2f2;
+      --burgundy: #800000; /* Бордовый для деталей и акцентов */
+      --burgundy-hover: #b30000;
+      --text-main: #4a4a4a; /* Основной текст */
+      --white: #ffffff;
+      --wrong-flash: rgba(214, 48, 49, 0.4); /* Красная вспышка */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease;
+    }
+    h1 {
+      color:var(--main-teal);
+          font-size: 52px;
+    text-align: center;
+    margin-bottom: 100px;
+    }
+
+    /* Анимация ошибки на весь экран */
+    body.wrong-answer {
+      background-color: var(--wrong-flash);
+    }
+
+    /* Шапка с логотипом */
+    header {
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 1000px;
+    }
+
+    .logo-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--main-teal);
+      font-weight: bold;
+    }
+
+    /* Основной контейнер */
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 128, 128, 0.1);
+      border-top: 5px solid var(--main-teal);
+      text-align: center;
+    }
+
+    h2 {
+      color: var(--main-teal);
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+
+    /* Сетка выбора чисел */
+    .selector-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .checkbox-container {
+      position: relative;
+      display: block;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 45px;
+      background-color: var(--light-teal);
+      border: 2px solid var(--main-teal);
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--main-teal);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background-color: var(--main-teal);
+      color: var(--white);
+    }
+
+    /* Кнопки */
+    .btn {
+      background: linear-gradient(to top, var(--burgundy) 0%, #d63031 100%);
+      color: var(--white);
+      border: none;
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.2s ease;
+      box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Счётчик */
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .score-val {
+      color: var(--burgundy);
+    }
+
+    /* Область примера */
+    .math-screen {
+      display: none;
+    }
+
+    .equation {
+      font-size: 48px;
+      font-weight: bold;
+      color: var(--main-teal);
+      margin: 30px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .answer-input {
+      width: 120px;
+      font-size: 36px;
+      padding: 5px 10px;
+      border: 3px solid var(--main-teal);
+      border-radius: 8px;
+      text-align: center;
+      color: var(--burgundy);
+      outline: none;
+    }
+
+    .answer-input:focus {
+      border-color: var(--burgundy);
+    }
+
+    /* Скрываем стрелочки у input type="number" */
+    .answer-input::-webkit-outer-spin-button,
+    .answer-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Canvas для конфетти */
+    #confetti-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Подвал */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      color: var(--main-teal);
+      font-weight: 500;
+    }
+
+       @media (max-width: 480px) {
+        h1 {
+          font-size: 30px;
+    margin-bottom: 50px;
+    }
+
+       }
+
+    @media (max-width: 480px) {
+      .selector-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .equation {
+        font-size: 36px;
+      }
+      .answer-input {
+        width: 100px;
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <div class="logo-placeholder"><img src="logo.png" width="100px"></div>
+  </header>
+
+  <main>
+      <h1>Тренажер таблицы умножения</h1>
+    <!-- ЭКРАН 1: Настройка тренажера -->
+    <div id="setup-screen" class="card">
+    
+      <h2>Выберите числа для тренировки:</h2>
+      <div class="selector-grid">
+        <!-- Генерируем чекбоксы от 2 до 10 -->
+        <script>
+          for (let i = 2; i <= 10; i++) {
+            document.write(`
+              <label class="checkbox-container">
+                <input type="checkbox" value="${i}" class="num-checkbox">
+                <span class="checkmark">${i}</span>
+              </label>
+            `);
+          }
+        </script>
+      </div>
+      <button class="btn" onclick="startTrainer()">Начать тренировку</button>
+    </div>
+
+    <!-- ЭКРАН 2: Тренажер -->
+    <div id="trainer-screen" class="card math-screen">
+      <div class="score-board">
+        <div>Решено: <span id="total-count" class="score-val">0</span></div>
+        <div>Правильно: <span id="correct-count" class="score-val">0</span></div>
+      </div>
+      
+      <form id="answer-form" onsubmit="checkAnswer(event)">
+        <div class="equation">
+          <span id="num1">?</span>
+          <span id="operator">×</span>
+          <span id="num2">?</span>
+          <span>=</span>
+          <input type="number" id="user-answer" class="answer-input" autocomplete="off" required>
+        </div>
+        <button type="submit" class="btn">Ответить</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    Мастерская IT-обучения "Кот и Код"
+  </footer>
+
+  <script>
+    // Настройки Canvas для эффекта конфетти
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let confetti = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class ConfettiParticle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + Math.random() * 20;
+        this.size = Math.random() * 6 + 4;
+        this.speedX = Math.random() * 4 - 2;
+        this.speedY = -(Math.random() * 8 + 6);
+        this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.speedY += 0.2; // Сила тяжести
+      }
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function triggerConfetti() {
+      confetti = [];
+      for (let i = 0; i < 70; i++) {
+        confetti.push(new ConfettiParticle());
+      }
+      animateConfetti();
+    }
+
+    let animationFrame;
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach((p, index) => {
+        p.update();
+        p.draw();
+        if (p.y > canvas.height + 10) {
+          confetti.splice(index, 1);
+        }
+      });
+      if (confetti.length > 0) {
+        animationFrame = requestAnimationFrame(animateConfetti);
+      } else {
+        cancelAnimationFrame(animationFrame);
+      }
+    }
+
+    // ЛОГИКА ТРЕНАЖЕРА
+    let selectedNumbers = [];
+    let scoreTotal = 0;
+    let scoreCorrect = 0;
+    let currentAnswer = 0;
+
+    function startTrainer() {
+      const checkboxes = document.querySelectorAll('.num-checkbox:checked');
+      selectedNumbers = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+      if (selectedNumbers.length === 0) {
+        alert("Пожалуйста, выберите хотя бы одно число для тренировки!");
+        return;
+      }
+
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('trainer-screen').style.display = 'block';
+      generateQuestion();
+    }
+
+    function generateQuestion() {
+      // Очищаем инпут
+      const input = document.getElementById('user-answer');
+      input.value = '';
+      input.focus();
+
+      // Случайное число из выбранных
+      const n1 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
+      // Второе число от 2 до 10
+      const n2 = Math.floor(Math.random() * 9) + 2; 
+      
+      // Случайный выбор операции: умножение или деление
+      const isMultiplication = Math.random() < 0.5;
+
+      if (isMultiplication) {
+        document.getElementById('num1').textContent = n1;
+        document.getElementById('operator').textContent = '×';
+        document.getElementById('num2').textContent = n2;
+        currentAnswer = n1 * n2;
+      } else {
+        // Чтобы деление было без остатка, делим произведение на одно из чисел
+        const product = n1 * n2;
+        document.getElementById('num1').textContent = product;
+        document.getElementById('operator').textContent = '÷';
+        document.getElementById('num2').textContent = n1;
+        currentAnswer = n2;
+      }
+    }
+
+    function checkAnswer(event) {
+      event.preventDefault();
+      const userAnswer = parseInt(document.getElementById('user-answer').value);
+      scoreTotal++;
+
+      if (userAnswer === currentAnswer) {
+        scoreCorrect++;
+        triggerConfetti();
+      } else {
+        // Подсвечиваем экран красным цветом на полсекунды
+        document.body.classList.add('wrong-answer');
+        setTimeout(() => {
+          document.body.classList.remove('wrong-answer');
+        }, 500);
+      }
+
+      // Обновляем статистику
+      document.getElementById('total-count').textContent = scoreTotal;
+      document.getElementById('correct-count').textContent = scoreCorrect;
+
+      // Сразу переходим к следующему примеру
+      generateQuestion();
+    }
+  </script>
+</body>
+</html>
